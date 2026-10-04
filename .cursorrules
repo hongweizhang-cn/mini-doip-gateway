@@ -1,0 +1,73 @@
+# mini-doip-gateway Cursor AI Development Rules
+
+These rules apply to all work in this repository. Follow them strictly.
+Do not expand the current task scope unless the user explicitly asks.
+
+## 1. Programming language and standard
+
+- Use ISO C99 only.
+- Do not use C++ syntax or C++ features.
+- Do not use unnecessary compiler-specific extensions.
+- Keep code as portable as practical across common C99 compilers and platforms.
+
+## 2. DoIP protocol
+
+- This project is a lightweight Automotive DoIP implementation for learning and demonstration.
+- Treat ISO 13400-2 as the primary specification for DoIP protocol behavior.
+- Do not claim that the current stage is a complete ISO 13400-2 implementation.
+- When adding features later, clearly distinguish:
+  - implemented behavior
+  - simplified/demo behavior
+  - not-yet-implemented behavior
+
+## 3. Data types
+
+- For DoIP protocol fields and other values that need a fixed width, prefer the
+  fixed-width integer types from `<stdint.h>`:
+  `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`,
+  `int8_t`, `int16_t`, `int32_t`, `int64_t`.
+- Not every C variable or function must use `<stdint.h>` types.
+- Use `size_t`, `bool`, pointers, and other standard C types when they fit the purpose.
+- Protocol fields must have an explicit data width.
+
+## 4. Error handling
+
+- Public C Core APIs use `doip_result_t` as the common error/status return type.
+- Do not invent separate integer error-code families to replace `doip_result_t`.
+- If an API is a poor fit for `doip_result_t`, explain why first. Do not silently
+  change this project convention.
+
+## 5. Network protocol messages and C data structures
+
+- Do not use C bit-fields to represent network protocol messages or protocol fields.
+- Do not serialize by `memcpy` of a C struct into a network buffer.
+- Do not treat a C struct's in-memory layout as the network message format.
+- Serialization and deserialization must explicitly control field offset, field
+  length, and byte order.
+- Handle DoIP network messages with explicit byte-level encode/decode.
+- Do not use struct padding or compiler-specific layout as part of the protocol.
+
+## 6. Byte order
+
+- DoIP protocol fields on the wire use network byte order (big-endian).
+- Do not assume the host CPU endianness matches network byte order.
+- Encode/decode code must explicitly place and read high and low bytes of
+  multi-byte fields.
+
+## 7. Modular design
+
+- Keep module responsibilities clear.
+- Keep shared data types separate from feature modules.
+- Do not create unnecessary include dependencies between unrelated modules.
+- The DoIP Header module is responsible only for the Generic Header data
+  structure and header encode/decode. It must not implement TCP, UDP, socket,
+  UDS, Tester, Gateway, or ECU logic.
+
+## 8. Code quality
+
+- Keep code simple, clear, readable, and testable.
+- Avoid unnecessary complexity.
+- Do not add features that the current stage does not need just to look complete.
+- Perform basic argument checks on public APIs.
+- If a requirement is technically ambiguous or would affect later architecture,
+  tell the user first instead of making a major architecture decision alone.
