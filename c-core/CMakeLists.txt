@@ -14,3 +14,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         -Wpedantic
     )
 endif()
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
