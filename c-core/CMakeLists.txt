@@ -1,5 +1,7 @@
 add_library(doip_core STATIC
     src/doip_header.c
+    src/doip_payload.c
+    src/doip_routing_activation_request.c
 )
 
 target_include_directories(doip_core
