@@ -14,6 +14,22 @@ endif()
 
 add_test(NAME test_doip_header COMMAND test_doip_header)
 
+add_executable(test_doip_gateway
+    test_doip_gateway.c
+)
+
+target_link_libraries(test_doip_gateway PRIVATE doip_core)
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(test_doip_gateway PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+    )
+endif()
+
+add_test(NAME test_doip_gateway COMMAND test_doip_gateway)
+
 add_executable(test_doip_message
     test_doip_message.c
 )
@@ -77,3 +93,35 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_test(NAME test_doip_routing_activation_response COMMAND test_doip_routing_activation_response)
+
+add_executable(test_doip_routing_activation
+    test_doip_routing_activation.c
+)
+
+target_link_libraries(test_doip_routing_activation PRIVATE doip_core)
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(test_doip_routing_activation PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+    )
+endif()
+
+add_test(NAME test_doip_routing_activation COMMAND test_doip_routing_activation)
+
+add_executable(test_doip_routing_activation_state
+    test_doip_routing_activation_state.c
+)
+
+target_link_libraries(test_doip_routing_activation_state PRIVATE doip_core)
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(test_doip_routing_activation_state PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+    )
+endif()
+
+add_test(NAME test_doip_routing_activation_state COMMAND test_doip_routing_activation_state)
