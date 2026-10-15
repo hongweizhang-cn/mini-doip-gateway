@@ -125,3 +125,39 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_test(NAME test_doip_routing_activation_state COMMAND test_doip_routing_activation_state)
+
+if(WIN32)
+    add_executable(test_doip_tcp_server
+        test_doip_tcp_server.c
+    )
+
+    target_link_libraries(test_doip_tcp_server PRIVATE doip_core ws2_32)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(test_doip_tcp_server PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+
+    add_test(NAME test_doip_tcp_server COMMAND test_doip_tcp_server)
+    set_tests_properties(test_doip_tcp_server PROPERTIES TIMEOUT 15)
+
+    add_executable(test_doip_tester
+        test_doip_tester.c
+    )
+
+    target_link_libraries(test_doip_tester PRIVATE doip_core ws2_32)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(test_doip_tester PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+
+    add_test(NAME test_doip_tester COMMAND test_doip_tester)
+    set_tests_properties(test_doip_tester PROPERTIES TIMEOUT 20)
+endif()

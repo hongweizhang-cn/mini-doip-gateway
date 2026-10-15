@@ -9,6 +9,40 @@ add_library(doip_core STATIC
     src/doip_routing_activation_response.c
 )
 
+if(WIN32)
+    target_sources(doip_core PRIVATE
+        src/doip_tcp_server.c
+        src/doip_tester.c
+    )
+    target_link_libraries(doip_core PUBLIC ws2_32)
+
+    add_executable(doip_tcp_server
+        src/doip_tcp_server_main.c
+    )
+    target_link_libraries(doip_tcp_server PRIVATE doip_core)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(doip_tcp_server PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+
+    add_executable(doip_tester
+        src/doip_tester_main.c
+    )
+    target_link_libraries(doip_tester PRIVATE doip_core)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(doip_tester PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+endif()
+
 target_include_directories(doip_core
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include

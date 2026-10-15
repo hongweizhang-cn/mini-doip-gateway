@@ -22,6 +22,11 @@ doip_result_t doip_header_encode(
         return DOIP_RESULT_BUFFER_TOO_SMALL;
     }
 
+    if ((header->protocol_version != DOIP_PROTOCOL_VERSION) ||
+        (header->inverse_protocol_version != DOIP_PROTOCOL_VERSION_INVERSE)) {
+        return DOIP_RESULT_INVALID_HEADER;
+    }
+
     buffer[0] = header->protocol_version;
     buffer[1] = header->inverse_protocol_version;
     buffer[2] = (uint8_t)((header->payload_type >> 8) & 0xFFu);
@@ -39,6 +44,8 @@ doip_result_t doip_header_decode(
     size_t buffer_size,
     doip_header_t *header)
 {
+    doip_header_t decoded_header;
+
     if ((buffer == NULL) || (header == NULL)) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
@@ -47,15 +54,21 @@ doip_result_t doip_header_decode(
         return DOIP_RESULT_BUFFER_TOO_SMALL;
     }
 
-    header->protocol_version = buffer[0];
-    header->inverse_protocol_version = buffer[1];
-    header->payload_type = (uint16_t)(
+    if ((buffer[0] != DOIP_PROTOCOL_VERSION) ||
+        (buffer[1] != DOIP_PROTOCOL_VERSION_INVERSE)) {
+        return DOIP_RESULT_INVALID_HEADER;
+    }
+
+    decoded_header.protocol_version = buffer[0];
+    decoded_header.inverse_protocol_version = buffer[1];
+    decoded_header.payload_type = (uint16_t)(
         ((uint16_t)buffer[2] << 8) | (uint16_t)buffer[3]);
-    header->payload_length =
+    decoded_header.payload_length =
         ((uint32_t)buffer[4] << 24) |
         ((uint32_t)buffer[5] << 16) |
         ((uint32_t)buffer[6] << 8) |
         (uint32_t)buffer[7];
+    *header = decoded_header;
 
     return DOIP_RESULT_OK;
 }

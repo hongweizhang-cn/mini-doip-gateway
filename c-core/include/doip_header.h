@@ -12,6 +12,9 @@
  * network message, and do not rely on its struct layout or padding.
  */
 #define DOIP_GENERIC_HEADER_SIZE ((size_t)8)
+/* This project currently accepts only the DoIP protocol version it emits. */
+#define DOIP_PROTOCOL_VERSION ((uint8_t)0x02u)
+#define DOIP_PROTOCOL_VERSION_INVERSE ((uint8_t)0xFDu)
 
 typedef struct {
     uint8_t protocol_version;

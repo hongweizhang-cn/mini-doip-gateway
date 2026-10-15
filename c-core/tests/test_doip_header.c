@@ -286,6 +286,65 @@ static int test_decode_buffer_too_small(void)
     return 0;
 }
 
+static int test_reject_unsupported_protocol_version(void)
+{
+    const char *name = "reject_unsupported_protocol_version";
+    uint8_t invalid_wire[DOIP_GENERIC_HEADER_SIZE];
+    doip_header_t header;
+    doip_result_t result;
+
+    fill_sample_header(&header);
+    header.protocol_version = 0x03u;
+    if (doip_header_encode(&header, invalid_wire, sizeof(invalid_wire)) !=
+        DOIP_RESULT_INVALID_HEADER) {
+        printf("FAIL: %s: encoder accepted unsupported protocol version\n", name);
+        return 1;
+    }
+
+    invalid_wire[0] = 0x03u;
+    invalid_wire[1] = 0xFCu;
+    header.payload_type = 0x1234u;
+    header.payload_length = 0x56789ABCu;
+    result = doip_header_decode(invalid_wire, sizeof(invalid_wire), &header);
+    if (check_result(name, DOIP_RESULT_INVALID_HEADER, result) != 0) {
+        return 1;
+    }
+    if ((header.payload_type != 0x1234u) ||
+        (header.payload_length != 0x56789ABCu)) {
+        printf("FAIL: %s: output Header changed on invalid version\n", name);
+        return 1;
+    }
+
+    return 0;
+}
+
+static int test_reject_mismatched_protocol_version_inverse(void)
+{
+    const char *name = "reject_mismatched_protocol_version_inverse";
+    uint8_t invalid_wire[DOIP_GENERIC_HEADER_SIZE];
+    doip_header_t header;
+    doip_result_t result;
+    size_t i;
+
+    for (i = 0u; i < DOIP_GENERIC_HEADER_SIZE; ++i) {
+        invalid_wire[i] = k_expected_wire[i];
+    }
+    invalid_wire[1] = 0xFCu;
+    header.payload_type = 0x1234u;
+    header.payload_length = 0x56789ABCu;
+
+    result = doip_header_decode(invalid_wire, sizeof(invalid_wire), &header);
+    if (check_result(name, DOIP_RESULT_INVALID_HEADER, result) != 0) {
+        return 1;
+    }
+    if ((header.payload_type != 0x1234u) ||
+        (header.payload_length != 0x56789ABCu)) {
+        printf("FAIL: %s: output Header changed on inverse mismatch\n", name);
+        return 1;
+    }
+    return 0;
+}
+
 static int test_big_endian_layout(void)
 {
     const char *name = "big_endian_layout";
@@ -362,6 +421,8 @@ int main(void)
     failures += test_decode_null_arguments();
     failures += test_encode_buffer_too_small();
     failures += test_decode_buffer_too_small();
+    failures += test_reject_unsupported_protocol_version();
+    failures += test_reject_mismatched_protocol_version_inverse();
     failures += test_big_endian_layout();
     failures += test_encode_buffer_larger_than_header();
 
