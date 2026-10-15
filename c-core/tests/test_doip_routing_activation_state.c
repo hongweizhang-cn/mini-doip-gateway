@@ -108,7 +108,7 @@ static int test_first_activation(void)
         return 1;
     }
 
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, &request, 0x00u, &response_code);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
@@ -132,13 +132,14 @@ static int test_same_client_reactivation_is_idempotent(void)
     doip_result_t result;
 
     if (doip_routing_activation_state_reset(&context) != DOIP_RESULT_OK ||
-        doip_routing_activation_state_process(&context, &first, 0x00u, &response_code) != DOIP_RESULT_OK) {
+        doip_routing_activation_state_process_request(
+            &context, &first, 0x00u, &response_code) != DOIP_RESULT_OK) {
         printf("FAIL: %s: setup failed\n", name);
         return 1;
     }
 
     response_code = 0u;
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, &repeated, 0x00u, &response_code);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
@@ -162,14 +163,14 @@ static int test_different_client_rejected_without_overwrite(void)
     doip_result_t result;
 
     if (doip_routing_activation_state_reset(&context) != DOIP_RESULT_OK ||
-        doip_routing_activation_state_process(
+        doip_routing_activation_state_process_request(
             &context, &active_client, conflict_response_code, &response_code) != DOIP_RESULT_OK) {
         printf("FAIL: %s: setup failed\n", name);
         return 1;
     }
 
     response_code = 0u;
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, &other_client, conflict_response_code, &response_code);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
@@ -191,14 +192,14 @@ static int test_parameter_errors_preserve_context(void)
     doip_result_t result;
 
     if (doip_routing_activation_state_reset(&context) != DOIP_RESULT_OK ||
-        doip_routing_activation_state_process(
+        doip_routing_activation_state_process_request(
             &context, &request, 0x00u, &response_code) != DOIP_RESULT_OK) {
         printf("FAIL: %s: setup failed\n", name);
         return 1;
     }
 
     response_code = 0xFFu;
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, NULL, 0x00u, &response_code);
     if (check_result("null_request", DOIP_RESULT_INVALID_ARGUMENT, result) != 0 ||
         response_code != 0u) {
@@ -210,19 +211,22 @@ static int test_parameter_errors_preserve_context(void)
         return 1;
     }
 
-    result = doip_routing_activation_state_process(NULL, &request, 0x00u, &response_code);
+    result = doip_routing_activation_state_process_request(
+        NULL, &request, 0x00u, &response_code);
     if (check_result("null_context", DOIP_RESULT_INVALID_ARGUMENT, result) != 0 ||
         response_code != 0u) {
         printf("FAIL: null_context: result or initialized Response Code incorrect\n");
         return 1;
     }
 
-    result = doip_routing_activation_state_process(&context, &request, 0x00u, NULL);
+    result = doip_routing_activation_state_process_request(
+        &context, &request, 0x00u, NULL);
     if (check_result("null_response_code", DOIP_RESULT_INVALID_ARGUMENT, result) != 0) {
         return 1;
     }
 
-    result = doip_routing_activation_state_process(&context, &request, 0u, &response_code);
+    result = doip_routing_activation_state_process_request(
+        &context, &request, 0u, &response_code);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
     }
@@ -249,7 +253,7 @@ static int test_reset_and_reactivate(void)
     doip_result_t result;
 
     if (doip_routing_activation_state_reset(&context) != DOIP_RESULT_OK ||
-        doip_routing_activation_state_process(
+        doip_routing_activation_state_process_request(
             &context, &request, 0x00u, &response_code) != DOIP_RESULT_OK) {
         printf("FAIL: %s: setup failed\n", name);
         return 1;
@@ -268,7 +272,7 @@ static int test_reset_and_reactivate(void)
     }
 
     response_code = 0u;
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, &request, 0x00u, &response_code);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
@@ -292,7 +296,7 @@ static int test_invalid_context_state_is_rejected(void)
     uint8_t response_code = 0xFFu;
     doip_result_t result;
 
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &context, &request, 0x00u, &response_code);
     if (check_result(name, DOIP_RESULT_INVALID_ARGUMENT, result) != 0) {
         return 1;

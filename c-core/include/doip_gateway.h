@@ -32,7 +32,7 @@ doip_result_t doip_gateway_init(
  * Clear only the Routing Activation state, retaining Gateway configuration.
  * Safe to call repeatedly.
  */
-doip_result_t doip_gateway_reset(doip_gateway_t *gateway);
+doip_result_t doip_gateway_reset_routing_activation(doip_gateway_t *gateway);
 
 /*
  * Process exactly one complete DoIP message. Routing Activation Request is

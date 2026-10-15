@@ -31,7 +31,7 @@ typedef struct {
  * address. Repeated resets are safe.
  */
 doip_result_t doip_routing_activation_state_reset(
-    doip_routing_activation_context_t *context);
+    doip_routing_activation_context_t *activation_context);
 
 /*
  * Process an already-decoded request. A first request activates the context;
@@ -42,11 +42,11 @@ doip_result_t doip_routing_activation_state_reset(
  * The activation type is not validated by this simplified state component.
  * response_code is set to zero on entry when non-NULL, and receives the
  * protocol Response Code only when the function returns DOIP_RESULT_OK.
- * response_code must not overlap context or request.
+ * response_code must not overlap activation_context or activation_request.
  */
-doip_result_t doip_routing_activation_state_process(
-    doip_routing_activation_context_t *context,
-    const doip_routing_activation_request_t *request,
+doip_result_t doip_routing_activation_state_process_request(
+    doip_routing_activation_context_t *activation_context,
+    const doip_routing_activation_request_t *activation_request,
     uint8_t conflict_response_code,
     uint8_t *response_code);
 
@@ -55,7 +55,7 @@ doip_result_t doip_routing_activation_state_process(
  * before validation. For an inactive context, the returned address is zero.
  */
 doip_result_t doip_routing_activation_state_get(
-    const doip_routing_activation_context_t *context,
+    const doip_routing_activation_context_t *activation_context,
     doip_routing_activation_state_t *state,
     uint16_t *client_logical_address);
 

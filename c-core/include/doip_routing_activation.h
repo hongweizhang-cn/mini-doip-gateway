@@ -13,7 +13,8 @@ typedef struct {
 } doip_routing_activation_response_parameters_t;
 
 /*
- * Encode a Routing Activation Response for an already-decoded Request.
+ * Encode a complete Routing Activation Response message from an already-
+ * decoded Routing Activation Request.
  * The Request and Response bodies are processed by their existing codecs;
  * the Generic Header and full message are processed by the existing message
  * codec. This function does not parse or validate a request message.
@@ -25,8 +26,8 @@ typedef struct {
  * message buffer is unchanged. On success output_size receives the complete
  * encoded message size.
  */
-doip_result_t doip_routing_activation_encode_response(
-    const doip_routing_activation_request_t *request,
+doip_result_t doip_routing_activation_encode_response_message(
+    const doip_routing_activation_request_t *decoded_request,
     const doip_routing_activation_response_parameters_t *response_parameters,
     uint8_t *output_message,
     size_t output_message_capacity,
@@ -35,12 +36,12 @@ doip_result_t doip_routing_activation_encode_response(
 /*
  * Compatibility/convenience entry point for callers with a complete Request
  * message. It decodes the message and Request Body once, then delegates
- * response construction to doip_routing_activation_encode_response().
+ * response construction to doip_routing_activation_encode_response_message().
  * Input and output message regions may overlap because the Request is decoded
  * before output is written. output_size must remain separate from all other
  * arguments.
  */
-doip_result_t doip_routing_activation_handle_request(
+doip_result_t doip_routing_activation_process_request_message(
     const uint8_t *input_message,
     size_t input_message_size,
     const doip_routing_activation_response_parameters_t *response_parameters,

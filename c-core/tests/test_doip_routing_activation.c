@@ -98,20 +98,25 @@ static int build_request_message(
 }
 
 static int process_request(
-    const uint8_t *input,
-    size_t input_size,
-    uint16_t entity_address,
+    const uint8_t *request_message,
+    size_t request_message_size,
+    uint16_t doip_entity_logical_address,
     uint8_t response_code,
-    uint8_t *output,
-    size_t output_capacity,
-    size_t *output_size)
+    uint8_t *response_message,
+    size_t response_message_capacity,
+    size_t *response_message_size)
 {
-    doip_routing_activation_response_parameters_t parameters;
+    doip_routing_activation_response_parameters_t response_parameters;
 
-    parameters.doip_entity_logical_address = entity_address;
-    parameters.response_code = response_code;
-    return doip_routing_activation_handle_request(
-        input, input_size, &parameters, output, output_capacity, output_size) ==
+    response_parameters.doip_entity_logical_address = doip_entity_logical_address;
+    response_parameters.response_code = response_code;
+    return doip_routing_activation_process_request_message(
+        request_message,
+        request_message_size,
+        &response_parameters,
+        response_message,
+        response_message_capacity,
+        response_message_size) ==
         DOIP_RESULT_OK ? 0 : 1;
 }
 
@@ -203,17 +208,19 @@ static int test_rejection_response_flow(void)
         name, output, output_size, 0x1234u, 0xABCDu, 0x06u);
 }
 
-static int test_decoded_request_response_api(void)
+static int test_build_response_message_from_decoded_request(void)
 {
-    const char *name = "decoded_request_response_api";
+    const char *name = "build_response_message_from_decoded_request";
     const doip_routing_activation_request_t request = {0x1234u, 0x01u};
-    const doip_routing_activation_response_parameters_t parameters = {0xABCDu, 0x7Fu};
+    const doip_routing_activation_response_parameters_t response_parameters = {
+        0xABCDu, 0x7Fu
+    };
     uint8_t output[TEST_RESPONSE_MESSAGE_SIZE];
     size_t output_size = 0u;
     doip_result_t result;
 
-    result = doip_routing_activation_encode_response(
-        &request, &parameters, output, sizeof(output), &output_size);
+    result = doip_routing_activation_encode_response_message(
+        &request, &response_parameters, output, sizeof(output), &output_size);
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
     }
@@ -235,7 +242,7 @@ static int test_raw_api_allows_input_output_overlap(void)
         return 1;
     }
 
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         message,
         TEST_REQUEST_MESSAGE_SIZE,
         &parameters,
@@ -270,7 +277,7 @@ static int expect_failure_unchanged(
     }
     *output_size = 99u;
 
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         input, input_size, parameters, output, output_capacity, output_size);
     if (check_result(name, expected_result, result) != 0) {
         return 1;
@@ -383,7 +390,7 @@ static int test_invalid_arguments_and_empty_input(void)
     }
 
     output_size = 99u;
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         NULL, sizeof(input), &parameters, output, sizeof(output), &output_size);
     if (check_result("null_input", DOIP_RESULT_INVALID_ARGUMENT, result) != 0 ||
         output_size != 0u) {
@@ -395,7 +402,7 @@ static int test_invalid_arguments_and_empty_input(void)
     }
 
     output_size = 99u;
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         input, sizeof(input), NULL, output, sizeof(output), &output_size);
     if (check_result("null_response_parameters", DOIP_RESULT_INVALID_ARGUMENT, result) != 0 ||
         output_size != 0u) {
@@ -407,7 +414,7 @@ static int test_invalid_arguments_and_empty_input(void)
     }
 
     output_size = 99u;
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         input, sizeof(input), &parameters, NULL, sizeof(output), &output_size);
     if (check_result("null_output_buffer", DOIP_RESULT_INVALID_ARGUMENT, result) != 0 ||
         output_size != 0u) {
@@ -415,7 +422,7 @@ static int test_invalid_arguments_and_empty_input(void)
         return 1;
     }
 
-    result = doip_routing_activation_handle_request(
+    result = doip_routing_activation_process_request_message(
         input, sizeof(input), &parameters, output, sizeof(output), NULL);
     if (check_result("null_output_size", DOIP_RESULT_INVALID_ARGUMENT, result) != 0) {
         return 1;
@@ -447,7 +454,7 @@ int main(void)
 
     failures += test_success_response_flow();
     failures += test_rejection_response_flow();
-    failures += test_decoded_request_response_api();
+    failures += test_build_response_message_from_decoded_request();
     failures += test_raw_api_allows_input_output_overlap();
     failures += test_invalid_payload_type();
     failures += test_malformed_message_lengths();

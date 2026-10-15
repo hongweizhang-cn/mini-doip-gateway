@@ -1,21 +1,21 @@
 #include "doip_routing_activation_state.h"
 
 doip_result_t doip_routing_activation_state_reset(
-    doip_routing_activation_context_t *context)
+    doip_routing_activation_context_t *activation_context)
 {
-    if (context == NULL) {
+    if (activation_context == NULL) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    context->state = DOIP_ROUTING_ACTIVATION_STATE_INACTIVE;
-    context->client_logical_address = 0u;
+    activation_context->state = DOIP_ROUTING_ACTIVATION_STATE_INACTIVE;
+    activation_context->client_logical_address = 0u;
 
     return DOIP_RESULT_OK;
 }
 
-doip_result_t doip_routing_activation_state_process(
-    doip_routing_activation_context_t *context,
-    const doip_routing_activation_request_t *request,
+doip_result_t doip_routing_activation_state_process_request(
+    doip_routing_activation_context_t *activation_context,
+    const doip_routing_activation_request_t *activation_request,
     uint8_t conflict_response_code,
     uint8_t *response_code)
 {
@@ -23,23 +23,27 @@ doip_result_t doip_routing_activation_state_process(
         *response_code = 0u;
     }
 
-    if ((context == NULL) || (request == NULL) || (response_code == NULL)) {
+    if ((activation_context == NULL) ||
+        (activation_request == NULL) ||
+        (response_code == NULL)) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    if ((context->state != DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) &&
-        (context->state != DOIP_ROUTING_ACTIVATION_STATE_ACTIVE)) {
+    if ((activation_context->state != DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) &&
+        (activation_context->state != DOIP_ROUTING_ACTIVATION_STATE_ACTIVE)) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    if (context->state == DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) {
-        context->client_logical_address = request->source_address;
-        context->state = DOIP_ROUTING_ACTIVATION_STATE_ACTIVE;
+    if (activation_context->state == DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) {
+        activation_context->client_logical_address =
+            activation_request->source_address;
+        activation_context->state = DOIP_ROUTING_ACTIVATION_STATE_ACTIVE;
         *response_code = DOIP_ROUTING_ACTIVATION_RESPONSE_CODE_SUCCESS;
         return DOIP_RESULT_OK;
     }
 
-    if (context->client_logical_address == request->source_address) {
+    if (activation_context->client_logical_address ==
+        activation_request->source_address) {
         *response_code = DOIP_ROUTING_ACTIVATION_RESPONSE_CODE_SUCCESS;
         return DOIP_RESULT_OK;
     }
@@ -49,7 +53,7 @@ doip_result_t doip_routing_activation_state_process(
 }
 
 doip_result_t doip_routing_activation_state_get(
-    const doip_routing_activation_context_t *context,
+    const doip_routing_activation_context_t *activation_context,
     doip_routing_activation_state_t *state,
     uint16_t *client_logical_address)
 {
@@ -60,19 +64,19 @@ doip_result_t doip_routing_activation_state_get(
         *client_logical_address = 0u;
     }
 
-    if ((context == NULL) || (state == NULL) ||
+    if ((activation_context == NULL) || (state == NULL) ||
         (client_logical_address == NULL)) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    if ((context->state != DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) &&
-        (context->state != DOIP_ROUTING_ACTIVATION_STATE_ACTIVE)) {
+    if ((activation_context->state != DOIP_ROUTING_ACTIVATION_STATE_INACTIVE) &&
+        (activation_context->state != DOIP_ROUTING_ACTIVATION_STATE_ACTIVE)) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    *state = context->state;
-    if (context->state == DOIP_ROUTING_ACTIVATION_STATE_ACTIVE) {
-        *client_logical_address = context->client_logical_address;
+    *state = activation_context->state;
+    if (activation_context->state == DOIP_ROUTING_ACTIVATION_STATE_ACTIVE) {
+        *client_logical_address = activation_context->client_logical_address;
     }
 
     return DOIP_RESULT_OK;

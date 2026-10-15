@@ -32,7 +32,7 @@ doip_result_t doip_gateway_init(
     return DOIP_RESULT_OK;
 }
 
-doip_result_t doip_gateway_reset(doip_gateway_t *gateway)
+doip_result_t doip_gateway_reset_routing_activation(doip_gateway_t *gateway)
 {
     if (gateway == NULL) {
         return DOIP_RESULT_INVALID_ARGUMENT;
@@ -49,8 +49,8 @@ doip_result_t doip_gateway_process_message(
     size_t output_message_capacity,
     size_t *output_size)
 {
-    doip_message_view_t request_message;
-    doip_routing_activation_request_t request;
+    doip_message_view_t decoded_request_message;
+    doip_routing_activation_request_t activation_request;
     doip_routing_activation_response_parameters_t response_parameters;
     uint8_t response_code;
     doip_result_t result;
@@ -66,20 +66,21 @@ doip_result_t doip_gateway_process_message(
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    result = doip_message_decode(input_message, input_message_size, &request_message);
+    result = doip_message_decode(
+        input_message, input_message_size, &decoded_request_message);
     if (result != DOIP_RESULT_OK) {
         return result;
     }
 
-    if (request_message.header.payload_type !=
+    if (decoded_request_message.header.payload_type !=
         DOIP_PAYLOAD_TYPE_ROUTING_ACTIVATION_REQUEST) {
         return DOIP_RESULT_UNSUPPORTED;
     }
 
     result = doip_routing_activation_request_decode(
-        request_message.payload,
-        request_message.header.payload_length,
-        &request);
+        decoded_request_message.payload,
+        decoded_request_message.header.payload_length,
+        &activation_request);
     if (result != DOIP_RESULT_OK) {
         return result;
     }
@@ -92,9 +93,9 @@ doip_result_t doip_gateway_process_message(
         return DOIP_RESULT_BUFFER_TOO_SMALL;
     }
 
-    result = doip_routing_activation_state_process(
+    result = doip_routing_activation_state_process_request(
         &gateway->routing_activation,
-        &request,
+        &activation_request,
         gateway->conflict_response_code,
         &response_code);
     if (result != DOIP_RESULT_OK) {
@@ -105,8 +106,8 @@ doip_result_t doip_gateway_process_message(
         gateway->doip_entity_logical_address;
     response_parameters.response_code = response_code;
 
-    result = doip_routing_activation_encode_response(
-        &request,
+    result = doip_routing_activation_encode_response_message(
+        &activation_request,
         &response_parameters,
         output_message,
         output_message_capacity,

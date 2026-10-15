@@ -11,9 +11,9 @@ doip_result_t doip_payload_check_length(
     size_t available_size);
 
 doip_result_t doip_payload_copy(
-    const uint8_t *src,
+    const uint8_t *source_bytes,
     uint32_t payload_length,
-    uint8_t *dst,
-    size_t dst_size);
+    uint8_t *destination_bytes,
+    size_t destination_capacity);
 
 #endif /* DOIP_PAYLOAD_H */

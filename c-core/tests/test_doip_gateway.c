@@ -423,8 +423,8 @@ static int test_reset_allows_new_activation(void)
     if (check_result(name, DOIP_RESULT_OK, result) != 0) {
         return 1;
     }
-    if (doip_gateway_reset(&gateway) != DOIP_RESULT_OK ||
-        doip_gateway_reset(&gateway) != DOIP_RESULT_OK) {
+    if (doip_gateway_reset_routing_activation(&gateway) != DOIP_RESULT_OK ||
+        doip_gateway_reset_routing_activation(&gateway) != DOIP_RESULT_OK) {
         printf("FAIL: %s: reset failed\n", name);
         return 1;
     }

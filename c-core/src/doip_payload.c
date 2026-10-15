@@ -12,10 +12,10 @@ doip_result_t doip_payload_check_length(
 }
 
 doip_result_t doip_payload_copy(
-    const uint8_t *src,
+    const uint8_t *source_bytes,
     uint32_t payload_length,
-    uint8_t *dst,
-    size_t dst_size)
+    uint8_t *destination_bytes,
+    size_t destination_capacity)
 {
     uint32_t i;
 
@@ -23,20 +23,20 @@ doip_result_t doip_payload_copy(
         return DOIP_RESULT_OK;
     }
 
-    if (src == NULL) {
+    if (source_bytes == NULL) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    if (dst == NULL) {
+    if (destination_bytes == NULL) {
         return DOIP_RESULT_INVALID_ARGUMENT;
     }
 
-    if ((size_t)payload_length > dst_size) {
+    if ((size_t)payload_length > destination_capacity) {
         return DOIP_RESULT_BUFFER_TOO_SMALL;
     }
 
     for (i = 0u; i < payload_length; ++i) {
-        dst[i] = src[i];
+        destination_bytes[i] = source_bytes[i];
     }
 
     return DOIP_RESULT_OK;
