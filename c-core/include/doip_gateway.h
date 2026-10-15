@@ -40,11 +40,13 @@ doip_result_t doip_gateway_reset(doip_gateway_t *gateway);
  * complete encoded Response and *output_size its byte length. When non-NULL,
  * output_size is set to zero on entry and remains zero on failure.
  *
- * Input is borrowed and may overlap output_message because output is staged
- * locally, but neither message buffer may overlap gateway. output_size must be
- * a separate size_t object and must not overlap gateway or either message
- * buffer. On any failure the output message buffer and Gateway activation
- * state remain unchanged.
+ * Input is borrowed and may overlap output_message because it is fully
+ * decoded before the response is written, but neither message buffer may
+ * overlap gateway. output_size must be a separate size_t object and must not
+ * overlap gateway or either message buffer. On validation or capacity
+ * failure, output and activation state remain unchanged. After successful
+ * state processing, the response encoder is called with prevalidated,
+ * fixed-size inputs and sufficient capacity.
  *
  * This component is single-threaded, handles one client context, and does not
  * implement transport, connection management, or a complete DoIP state

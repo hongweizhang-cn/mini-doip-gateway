@@ -203,6 +203,53 @@ static int test_rejection_response_flow(void)
         name, output, output_size, 0x1234u, 0xABCDu, 0x06u);
 }
 
+static int test_decoded_request_response_api(void)
+{
+    const char *name = "decoded_request_response_api";
+    const doip_routing_activation_request_t request = {0x1234u, 0x01u};
+    const doip_routing_activation_response_parameters_t parameters = {0xABCDu, 0x7Fu};
+    uint8_t output[TEST_RESPONSE_MESSAGE_SIZE];
+    size_t output_size = 0u;
+    doip_result_t result;
+
+    result = doip_routing_activation_encode_response(
+        &request, &parameters, output, sizeof(output), &output_size);
+    if (check_result(name, DOIP_RESULT_OK, result) != 0) {
+        return 1;
+    }
+
+    return check_successful_response(
+        name, output, output_size, 0x1234u, 0xABCDu, 0x7Fu);
+}
+
+static int test_raw_api_allows_input_output_overlap(void)
+{
+    const char *name = "raw_api_allows_input_output_overlap";
+    const doip_routing_activation_response_parameters_t parameters = {0x1000u, 0x10u};
+    uint8_t message[TEST_RESPONSE_MESSAGE_SIZE];
+    size_t output_size = 0u;
+    doip_result_t result;
+
+    if (build_request_message(0x0E00u, 0u, message) != 0) {
+        printf("FAIL: %s: could not prepare Request message\n", name);
+        return 1;
+    }
+
+    result = doip_routing_activation_handle_request(
+        message,
+        TEST_REQUEST_MESSAGE_SIZE,
+        &parameters,
+        message,
+        sizeof(message),
+        &output_size);
+    if (check_result(name, DOIP_RESULT_OK, result) != 0) {
+        return 1;
+    }
+
+    return check_successful_response(
+        name, message, output_size, 0x0E00u, 0x1000u, 0x10u);
+}
+
 static int expect_failure_unchanged(
     const char *name,
     const uint8_t *input,
@@ -400,6 +447,8 @@ int main(void)
 
     failures += test_success_response_flow();
     failures += test_rejection_response_flow();
+    failures += test_decoded_request_response_api();
+    failures += test_raw_api_allows_input_output_overlap();
     failures += test_invalid_payload_type();
     failures += test_malformed_message_lengths();
     failures += test_malformed_request_body();

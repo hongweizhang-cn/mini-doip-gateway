@@ -2,7 +2,6 @@
 
 #include "doip_header.h"
 #include "doip_message.h"
-#include "doip_payload.h"
 #include "doip_payload_type.h"
 #include "doip_routing_activation.h"
 #include "doip_routing_activation_request.h"
@@ -54,8 +53,6 @@ doip_result_t doip_gateway_process_message(
     doip_routing_activation_request_t request;
     doip_routing_activation_response_parameters_t response_parameters;
     uint8_t response_code;
-    uint8_t staged_output[DOIP_GATEWAY_RESPONSE_MESSAGE_SIZE];
-    size_t staged_output_size;
     doip_result_t result;
 
     if (output_size != NULL) {
@@ -91,7 +88,7 @@ doip_result_t doip_gateway_process_message(
      * The response size is fixed. Check capacity before processing the state
      * so a short output buffer cannot activate or otherwise alter the client.
      */
-    if (output_message_capacity < sizeof(staged_output)) {
+    if (output_message_capacity < DOIP_GATEWAY_RESPONSE_MESSAGE_SIZE) {
         return DOIP_RESULT_BUFFER_TOO_SMALL;
     }
 
@@ -108,26 +105,15 @@ doip_result_t doip_gateway_process_message(
         gateway->doip_entity_logical_address;
     response_parameters.response_code = response_code;
 
-    result = doip_routing_activation_handle_request(
-        input_message,
-        input_message_size,
+    result = doip_routing_activation_encode_response(
+        &request,
         &response_parameters,
-        staged_output,
-        sizeof(staged_output),
-        &staged_output_size);
-    if (result != DOIP_RESULT_OK) {
-        return result;
-    }
-
-    result = doip_payload_copy(
-        staged_output,
-        (uint32_t)staged_output_size,
         output_message,
-        output_message_capacity);
+        output_message_capacity,
+        output_size);
     if (result != DOIP_RESULT_OK) {
         return result;
     }
 
-    *output_size = staged_output_size;
     return DOIP_RESULT_OK;
 }
