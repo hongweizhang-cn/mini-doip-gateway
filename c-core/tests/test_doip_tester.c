@@ -32,6 +32,7 @@ typedef enum {
     FAKE_PEER_OVERSIZED_PAYLOAD,
     FAKE_PEER_PARTIAL_HEADER,
     FAKE_PEER_PARTIAL_PAYLOAD,
+    FAKE_PEER_SLOW_HEADER,
     FAKE_PEER_INVALID_PAYLOAD_LENGTH,
     FAKE_PEER_WRONG_PAYLOAD_TYPE,
     FAKE_PEER_MISMATCHED_ADDRESS
@@ -153,7 +154,24 @@ static DWORD WINAPI run_fake_peer(LPVOID argument)
     } else if (peer->mode == FAKE_PEER_PARTIAL_PAYLOAD) {
         response_bytes = DOIP_GENERIC_HEADER_SIZE + 3u;
     }
-    if (send_all(client_socket, peer->response_message, response_bytes) != 0) {
+    if (peer->mode == FAKE_PEER_SLOW_HEADER) {
+        size_t i;
+
+        for (i = 0u; i < DOIP_GENERIC_HEADER_SIZE; ++i) {
+            if (send_all(client_socket, &peer->response_message[i], 1u) != 0) {
+                break;
+            }
+            if (i + 1u < DOIP_GENERIC_HEADER_SIZE) {
+                Sleep(900u);
+            }
+        }
+        if (i == DOIP_GENERIC_HEADER_SIZE) {
+            send_all(
+                client_socket,
+                peer->response_message + DOIP_GENERIC_HEADER_SIZE,
+                peer->response_size - DOIP_GENERIC_HEADER_SIZE);
+        }
+    } else if (send_all(client_socket, peer->response_message, response_bytes) != 0) {
         peer->thread_result = 4;
     }
     shutdown(client_socket, SD_BOTH);
@@ -409,6 +427,38 @@ static int test_connect_failure(void)
     return 0;
 }
 
+static int test_slow_response_has_total_timeout(void)
+{
+    const char *name = "slow_response_has_total_timeout";
+    fake_peer_t peer;
+    doip_routing_activation_response_t response;
+    DWORD started_at;
+    DWORD elapsed;
+    doip_result_t result;
+    int failures = 0;
+
+    if (start_fake_peer(&peer, FAKE_PEER_SLOW_HEADER) != 0) {
+        printf("FAIL: %s: could not create fake TCP peer\n", name);
+        return 1;
+    }
+
+    started_at = GetTickCount();
+    result = run_tester(peer.port, &response);
+    elapsed = GetTickCount() - started_at;
+    if (result != DOIP_RESULT_UNSUPPORTED) {
+        printf("FAIL: %s: expected bounded receive timeout, got result %d\n",
+            name, (int)result);
+        failures++;
+    }
+    if (elapsed > 6500u) {
+        printf("FAIL: %s: Tester exceeded total timeout bound (%lu ms)\n",
+            name, (unsigned long)elapsed);
+        failures++;
+    }
+    failures += finish_fake_peer(&peer);
+    return failures;
+}
+
 int main(void)
 {
     WSADATA winsock_data;
@@ -424,6 +474,7 @@ int main(void)
     failures += test_fake_response(
         FAKE_PEER_VALID_REJECTION, DOIP_RESULT_UNSUPPORTED, 0x03u,
         "non-success-response-code");
+    failures += test_slow_response_has_total_timeout();
     failures += test_fake_response(
         FAKE_PEER_INVALID_HEADER, DOIP_RESULT_INVALID_HEADER, 0u,
         "invalid-header");

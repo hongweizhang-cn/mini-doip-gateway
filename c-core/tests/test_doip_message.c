@@ -168,7 +168,6 @@ static int test_encode_capacity_too_small_no_write(void)
 
 static int test_encode_null_arguments(void)
 {
-    const char *name = "encode_null_arguments";
     const doip_header_t header = {0x02u, 0xFDu, 0x8001u, 1u};
     const uint8_t payload[1] = {0x11u};
     uint8_t buffer[9];

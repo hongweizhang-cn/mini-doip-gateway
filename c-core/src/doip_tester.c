@@ -9,6 +9,7 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 
 #include "doip_header.h"
 #include "doip_message.h"
@@ -20,22 +21,69 @@
 #define DOIP_TESTER_IO_TIMEOUT_MS 5000u
 #define DOIP_TESTER_MAX_PAYLOAD_SIZE ((size_t)4096u)
 
+static int wait_for_socket(
+    SOCKET socket_handle,
+    int wait_for_write,
+    DWORD operation_start)
+{
+    fd_set socket_set;
+    struct timeval timeout;
+    DWORD elapsed = GetTickCount() - operation_start;
+    DWORD remaining;
+    int select_result;
+
+    if (elapsed >= DOIP_TESTER_IO_TIMEOUT_MS) {
+        return 0;
+    }
+    remaining = DOIP_TESTER_IO_TIMEOUT_MS - elapsed;
+
+    FD_ZERO(&socket_set);
+    FD_SET(socket_handle, &socket_set);
+    timeout.tv_sec = (long)(remaining / 1000u);
+    timeout.tv_usec = (long)((remaining % 1000u) * 1000u);
+    if (wait_for_write) {
+        select_result = select(0, NULL, &socket_set, NULL, &timeout);
+    } else {
+        select_result = select(0, &socket_set, NULL, NULL, &timeout);
+    }
+
+    return select_result;
+}
+
 static doip_result_t send_all(
     SOCKET socket_handle,
     const uint8_t *bytes,
     size_t byte_count)
 {
     size_t sent_total = 0u;
+    DWORD operation_start = GetTickCount();
 
     while (sent_total < byte_count) {
-        int sent_now = send(
+        int ready = wait_for_socket(socket_handle, 1, operation_start);
+        int sent_now;
+
+        if (ready == 0) {
+            fprintf(stderr, "Tester send timed out.\n");
+            return DOIP_RESULT_UNSUPPORTED;
+        }
+        if (ready == SOCKET_ERROR) {
+            fprintf(stderr, "Tester could not wait to send (Winsock error %d).\n",
+                WSAGetLastError());
+            return DOIP_RESULT_UNSUPPORTED;
+        }
+        sent_now = send(
             socket_handle,
             (const char *)bytes + sent_total,
             (int)(byte_count - sent_total),
             0);
         if (sent_now == SOCKET_ERROR) {
+            int socket_error = WSAGetLastError();
+            if ((socket_error == WSAEWOULDBLOCK) ||
+                (socket_error == WSAEINTR)) {
+                continue;
+            }
             fprintf(stderr, "Tester send failed (Winsock error %d).\n",
-                WSAGetLastError());
+                socket_error);
             return DOIP_RESULT_UNSUPPORTED;
         }
         if (sent_now == 0) {
@@ -54,9 +102,22 @@ static doip_result_t receive_exact(
     size_t byte_count)
 {
     size_t received_total = 0u;
+    DWORD operation_start = GetTickCount();
 
     while (received_total < byte_count) {
-        int received_now = recv(
+        int ready = wait_for_socket(socket_handle, 0, operation_start);
+        int received_now;
+
+        if (ready == 0) {
+            fprintf(stderr, "Tester receive timed out.\n");
+            return DOIP_RESULT_UNSUPPORTED;
+        }
+        if (ready == SOCKET_ERROR) {
+            fprintf(stderr, "Tester could not wait to receive (Winsock error %d).\n",
+                WSAGetLastError());
+            return DOIP_RESULT_UNSUPPORTED;
+        }
+        received_now = recv(
             socket_handle,
             (char *)bytes + received_total,
             (int)(byte_count - received_total),
@@ -66,8 +127,13 @@ static doip_result_t receive_exact(
             return DOIP_RESULT_INVALID_LENGTH;
         }
         if (received_now == SOCKET_ERROR) {
+            int socket_error = WSAGetLastError();
+            if ((socket_error == WSAEWOULDBLOCK) ||
+                (socket_error == WSAEINTR)) {
+                continue;
+            }
             fprintf(stderr, "Tester receive failed (Winsock error %d).\n",
-                WSAGetLastError());
+                socket_error);
             return DOIP_RESULT_UNSUPPORTED;
         }
         received_total += (size_t)received_now;
@@ -89,7 +155,6 @@ static doip_result_t connect_with_timeout(
     int connect_result;
     int socket_error = 0;
     int socket_error_size = (int)sizeof(socket_error);
-    DWORD timeout_ms = DOIP_TESTER_IO_TIMEOUT_MS;
 
     socket_handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socket_handle == INVALID_SOCKET) {
@@ -155,15 +220,8 @@ static doip_result_t connect_with_timeout(
         return DOIP_RESULT_UNSUPPORTED;
     }
 
-    nonblocking = 0u;
-    if ((ioctlsocket(socket_handle, FIONBIO, &nonblocking) == SOCKET_ERROR) ||
-        (setsockopt(
-            socket_handle, SOL_SOCKET, SO_RCVTIMEO,
-            (const char *)&timeout_ms, (int)sizeof(timeout_ms)) == SOCKET_ERROR) ||
-        (setsockopt(
-            socket_handle, SOL_SOCKET, SO_SNDTIMEO,
-            (const char *)&timeout_ms, (int)sizeof(timeout_ms)) == SOCKET_ERROR)) {
-        fprintf(stderr, "Could not configure Tester socket timeouts (Winsock error %d).\n",
+    if (ioctlsocket(socket_handle, FIONBIO, &nonblocking) == SOCKET_ERROR) {
+        fprintf(stderr, "Could not configure Tester socket (Winsock error %d).\n",
             WSAGetLastError());
         closesocket(socket_handle);
         return DOIP_RESULT_UNSUPPORTED;
