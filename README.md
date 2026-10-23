@@ -50,6 +50,7 @@ flowchart LR
 - A minimal Routing Activation state model: the first request activates the context; a repeated request from the same logical address is treated as successful; a different logical address receives the configured conflict Response Code without replacing the active address.
 - A Windows Winsock TCP Server with a single-client service loop, bounded payload buffering, TCP short-read handling, and complete-send handling.
 - A Windows Tester Simulator that validates the response Header, Payload Type, Payload Length, Response Body, client/entity logical addresses, and Response Code. It reports success only for Response Code `0x10` and matching logical addresses.
+- The Tester uses a 3-second connection timeout and a 5-second total deadline for its send operation and for each exact-read stage (response Header and response Payload).
 - Unit tests for Header, Message, Payload, Gateway, and Routing Activation modules, plus Windows TCP Server and Tester integration tests.
 
 The TCP Server's 4096-byte maximum payload and the Tester's corresponding receive limit are local implementation safety limits, not a claim about the general maximum defined by the DoIP standard.

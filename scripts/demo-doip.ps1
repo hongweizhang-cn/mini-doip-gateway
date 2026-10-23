@@ -108,10 +108,12 @@ try {
     $testerStdout = $testerProcess.StandardOutput.ReadToEndAsync()
     $testerStderr = $testerProcess.StandardError.ReadToEndAsync()
 
-    if (-not $testerProcess.WaitForExit(15000)) {
+    if (-not $testerProcess.WaitForExit(20000)) {
         try {
             $testerProcess.Kill()
-            $testerProcess.WaitForExit()
+            if (-not $testerProcess.WaitForExit(5000)) {
+                Write-Warning "Tester process $($testerProcess.Id) did not exit after termination was requested."
+            }
         }
         catch {
             Write-Warning "Could not terminate the Tester process: $_"
@@ -143,7 +145,9 @@ finally {
         Write-Host "Stopping the DoIP TCP Server started by this script ..."
         try {
             $serverProcess.Kill()
-            $serverProcess.WaitForExit(5000) | Out-Null
+            if (-not $serverProcess.WaitForExit(5000)) {
+                Write-Warning "Server process $($serverProcess.Id) did not exit after termination was requested."
+            }
         }
         catch {
             Write-Warning "Could not stop the Server process $($serverProcess.Id): $_"
