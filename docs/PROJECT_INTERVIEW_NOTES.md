@@ -56,3 +56,37 @@
 - The Tester validates the Generic Header, expected Response Payload Type and length, response body, logical addresses, and success Response Code. A non-success Response Code is reported as failure.
 - The transport implementation and network integration tests are Windows Winsock-specific. Other platforms have not been established as supported for the TCP Server or Tester.
 - The project is an educational implementation; it does not claim complete ISO 13400 behavior, production deployment, performance measurements, or official certification.
+
+## Detailed Technical Documentation
+
+### Chinese Documentation
+
+1. [Project Overview](technical-guide/cn/00_PROJECT_OVERVIEW.md)
+2. [System Architecture](technical-guide/cn/01_SYSTEM_ARCHITECTURE.md)
+3. [DoIP Protocol and Message Format](technical-guide/cn/02_DOIP_PROTOCOL_AND_MESSAGE_FORMAT.md)
+4. [Protocol Core Implementation](technical-guide/cn/03_PROTOCOL_CORE_IMPLEMENTATION.md)
+5. [Routing Activation Implementation](technical-guide/cn/04_ROUTING_ACTIVATION_IMPLEMENTATION.md)
+6. [TCP Server Implementation](technical-guide/cn/05_TCP_SERVER_IMPLEMENTATION.md)
+7. [Tester Implementation](technical-guide/cn/06_TESTER_IMPLEMENTATION.md)
+8. [Data Flow and Function Calls](technical-guide/cn/07_DATA_FLOW_AND_FUNCTION_CALLS.md)
+9. [Error Handling and Boundary Conditions](technical-guide/cn/08_ERROR_HANDLING_AND_BOUNDARY_CONDITIONS.md)
+10. [Build, Test, and Debugging](technical-guide/cn/09_BUILD_TEST_AND_DEBUGGING.md)
+11. [Design Decisions and Trade-Offs](technical-guide/cn/10_DESIGN_DECISIONS_AND_TRADE_OFFS.md)
+12. [Limitations and Future Improvements](technical-guide/cn/11_LIMITATIONS_AND_FUTURE_IMPROVEMENTS.md)
+13. [Interview Q&A](technical-guide/cn/12_INTERVIEW_QA.md)
+
+### English Documentation
+
+1. [Project Overview](technical-guide/en/00_PROJECT_OVERVIEW.md)
+2. [System Architecture](technical-guide/en/01_SYSTEM_ARCHITECTURE.md)
+3. [DoIP Protocol and Message Format](technical-guide/en/02_DOIP_PROTOCOL_AND_MESSAGE_FORMAT.md)
+4. [Protocol Core Implementation](technical-guide/en/03_PROTOCOL_CORE_IMPLEMENTATION.md)
+5. [Routing Activation Implementation](technical-guide/en/04_ROUTING_ACTIVATION_IMPLEMENTATION.md)
+6. [TCP Server Implementation](technical-guide/en/05_TCP_SERVER_IMPLEMENTATION.md)
+7. [Tester Implementation](technical-guide/en/06_TESTER_IMPLEMENTATION.md)
+8. [Data Flow and Function Calls](technical-guide/en/07_DATA_FLOW_AND_FUNCTION_CALLS.md)
+9. [Error Handling and Boundary Conditions](technical-guide/en/08_ERROR_HANDLING_AND_BOUNDARY_CONDITIONS.md)
+10. [Build, Test, and Debugging](technical-guide/en/09_BUILD_TEST_AND_DEBUGGING.md)
+11. [Design Decisions and Trade-Offs](technical-guide/en/10_DESIGN_DECISIONS_AND_TRADE_OFFS.md)
+12. [Limitations and Future Improvements](technical-guide/en/11_LIMITATIONS_AND_FUTURE_IMPROVEMENTS.md)
+13. [Interview Q&A](technical-guide/en/12_INTERVIEW_QA.md)
